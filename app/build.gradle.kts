@@ -14,41 +14,38 @@ android {
     compileSdk = ASdk.compile
 
     signingConfigs {
-        // 默认 debug 签名
-        getByName("debug") { }
+        // 尝试从 keystore.properties 文件加载签名配置
+        val keystorePropsFile = rootProject.file("keystore.properties")
+        if (keystorePropsFile.exists()) {
+            val si = SignatureInfo(keystorePropsFile)
+            val storeFile = si.storeFile
+            val storePassword = si.storePassword
+            val keyAlias = si.keyAlias
+            val keyPassword = si.keyPassword
+            val hasCustomSigning = file(storeFile).exists() && storePassword.isNotEmpty() && keyAlias.isNotEmpty() && keyPassword.isNotEmpty()
+            if (hasCustomSigning) {
+                try {
+                    register("customSigning") {
+                        this.storeFile = storeFile
+                        this.storePassword = storePassword
+                        this.keyAlias = keyAlias
+                        this.keyPassword = keyPassword
 
-        // 尝试加载正式签名（支持 local.properties 文件 / 系统环境变量 / Base64）
-        // 先检查环境变量或 local.properties 中是否存在签名配置
-        val hasSigningEnv = System.getenv("SIGNATURE_STORE_FILE_BASE64") != null
-                || System.getenv("SIGNATURE_STORE_FILE_PATH") != null
-        val propsFile = rootProject.file("local.properties")
-        val hasSigningProps = propsFile.exists() && propsFile.readText().contains("signature.store")
-        val shouldLoadSigning = hasSigningEnv || hasSigningProps
-
-        if (shouldLoadSigning) {
-            try {
-                val si = SignatureInfo(propsFile)
-                // 优先从文件路径加载，失败则从 Base64 加载
-                val storeFile = try { si.storeFileFromPath } catch (_: Exception) { si.storeFileFromBase64 }
-                val storePassword = si.storePassword
-                val keyAlias = si.keyAlias
-                val keyPassword = si.keyPassword
-                // 所有属性都成功获取后才创建 release 签名配置
-                create("release") {
-                    enableV1Signing = true
-                    enableV2Signing = true
-                    enableV3Signing = true
-                    this.storeFile = storeFile
-                    this.storePassword = storePassword
-                    this.keyAlias = keyAlias
-                    this.keyPassword = keyPassword
+                        enableV1Signing = true
+                        enableV2Signing = true
+                        enableV3Signing = true
+                    }
+                    logger.lifecycle("✅ 已从 keystore.properties 加载签名配置")
+                } catch (e: Exception) {
+                    logger.lifecycle("⚠️ 签名配置加载失败。(${e.message})")
                 }
-                logger.lifecycle("✅ 正式签名配置已加载")
-            } catch (e: Exception) {
-                logger.lifecycle("⚠️ 签名配置加载失败，将使用 debug 签名。(${e.message})")
+            } else if (!file(storeFile).exists()) {
+                logger.lifecycle("⚠️ 签名配置加载失败。密钥文件不存在：${storeFile}")
+            } else {
+                logger.lifecycle("⚠️ keystore.properties 文件中缺少必要的配置项，签名配置加载失败。")
             }
         } else {
-            logger.lifecycle("ℹ️ 未检测到签名配置，使用 debug 签名。")
+            logger.lifecycle("ℹ️ 未找到 keystore.properties 文件。")
         }
     }
 
@@ -68,7 +65,9 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+
+            signingConfig = signingConfigs.findByName("customSigning")
+
             setProguardFiles(
                 listOf(
                     getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -77,7 +76,7 @@ android {
             )
         }
         debug {
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("customSigning")
         }
     }
     compileOptions {
