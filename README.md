@@ -3,7 +3,7 @@
 > **Put a sheep's skin on your Android app.**
 > 为每个应用穿上不同的「设备外衣」，保护隐私，绕过设备指纹检测。
 
-[![编译状态](https://github.com/xiaojing110/Guise/actions/workflows/build.yml/badge.svg)](https://github.com/xiaojing110/Guise/actions/workflows/build.yml)
+[![编译状态](https://github.com/boonlove/Guise/actions/workflows/build.yml/badge.svg)](https://github.com/boonlove/Guise/actions/workflows/build.yml)
 [![License](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
 ---
@@ -84,50 +84,6 @@
 
 ---
 
-## 🔨 自动编译（GitHub Actions）
-
-本项目已配置 GitHub Actions 自动编译，**推送代码即自动构建 APK**。
-
-### 触发条件
-| 事件 | 行为 |
-|:---|:---|
-| Push 到 `master` / `main` | 编译 Debug APK → 上传为 Artifact |
-| Pull Request | 编译 Debug APK → 用于 Code Review |
-| 打 Tag（如 `v1.2.0`） | 编译 Release APK → 创建 GitHub Release |
-
-### 签名配置（可选）
-
-如需编译**正式签名版本**，请在仓库 **Settings → Secrets and variables → Actions** 中配置以下 Secrets：
-
-| Secret 名称 | 说明 |
-|:---|:---|
-| `SIGNATURE_STORE_FILE_BASE64` | 签名文件的 Base64 编码（`base64 your-keystore.jks`） |
-| `SIGNATURE_STORE_PASSWORD` | 签名文件密码 |
-| `SIGNATURE_STORE_TYPE` | 签名类型（通常为 `jks`） |
-| `SIGNATURE_KEY_ALIAS` | Key 别名 |
-| `SIGNATURE_KEY_PASSWORD` | Key 密码 |
-
-> 未配置 Secrets 时，自动使用 Android SDK 默认的 debug 签名编译。
-
-#### 生成签名文件 Base64
-```bash
-# Linux / macOS
-base64 -i your-keystore.jks | tr -d '\n'
-
-# Windows (PowerShell)
-[Convert]::ToBase64String([IO.File]::ReadAllBytes("your-keystore.jks"))
-```
-
-#### 快速生成测试签名
-```bash
-keytool -genkey -v -keystore guisesign.jks -alias guise \
-  -keyalg RSA -keysize 2048 -validity 10000 \
-  -storepass android -keypass android \
-  -dname "CN=Guise, OU=Dev, O=Guise, L=Beijing, ST=Beijing, C=CN"
-```
-
----
-
 ## 🏗️ 项目结构
 
 ```
@@ -164,12 +120,11 @@ Guise/
 ### 本地编译
 ```bash
 # 1. 配置签名（可选）
-cat > local.properties << EOF
-signature.store.file.path=/path/to/your-keystore.jks
-signature.store.password=your-password
-signature.store.type=jks
-signature.key.alias=your-alias
-signature.key.password=your-key-password
+cat > keystore.properties << EOF
+storeFile=/path/to/your-keystore.jks
+storePassword=your-password
+keyAlias=your-alias
+keyPassword=your-key-password
 EOF
 
 # 2. 编译
@@ -181,27 +136,20 @@ ls app/build/outputs/apk/release/*.apk
 
 ### 无签名编译
 ```bash
-# 不配置 local.properties，自动使用 debug 签名
-./gradlew assembleDebug
+# 不配置 keystore.properties，编译的 apk 需要手动签名
+./gradlew assembleRelease
 ```
-
----
-
-## 📋 更新日志
-
-### v1.2.0（当前）
-- ✅ 新增 2025/2026 最新机型（S25、Pixel 9、iPhone 16、Mate 70 等）
-- ✅ 新增 **反检测隐身模式**（隐藏 Xposed/Root/Magisk/Frida 痕迹）
-- ✅ 全新 Indigo/Violet 紫色主题配色
-- ✅ 配置分区增加 Material Icon 图标
-- ✅ Android 14/15/16 版本支持
-- ✅ GitHub Actions 自动编译 CI/CD
 
 ---
 
 ## ⚠️ 免责声明
 
 本项目仅供学习和研究使用。使用本模块进行的任何行为均与本项目无关，请勿用于任何违反法律法规的用途。
+
+---
+
+## 🎁 鸣谢
+- [xiaojing110/Guise](https://github.com/xiaojing110/Guise)
 
 ---
 
