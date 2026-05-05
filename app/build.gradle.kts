@@ -49,6 +49,22 @@ android {
         }
     }
 
+    applicationVariants.all {
+        val variant = this
+        outputs.all {
+            // 将 output 转换为 BaseVariantOutputImpl 以访问 outputFileName
+            val output = this as? com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            
+            // 获取项目属性 app_name，如果未定义则给定默认值
+            val appName = rootProject.name
+            val versionName = version.versionName
+            val versionCode = version.versionCode
+            val buildType = variant.buildType.name
+
+            output?.outputFileName = "${appName}-v${versionName}-${versionCode}-${buildType}.apk"
+        }
+    }
+
     defaultConfig {
         applicationId = namespace
         minSdk = ASdk.min
