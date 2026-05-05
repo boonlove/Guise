@@ -108,6 +108,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
+          body_path: CHANGELOG.md
           files: app/build/outputs/apk/release/*.apk
           generate_release_notes: true
           prerelease: false
