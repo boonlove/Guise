@@ -24,7 +24,7 @@
 
 ### 二、软件的获取
 
-2.1 你可以直接在[Github Release](https://github.com/xiaojing110/Guise/releases)上下载最新的版本。
+2.1 你可以直接在[Github Release](https://github.com/boonlove/Guise/releases)上下载最新的版本。
 
 2.2  **如果你从不在上述渠道中的渠道获取了该软件，Guise无法保证该软件能够正常使用，并对因此给你造成的损失不予负责。**
 
