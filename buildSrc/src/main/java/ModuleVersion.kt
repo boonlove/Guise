@@ -1,36 +1,35 @@
-import java.io.File
-import java.util.Properties
-
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-class ModuleVersion(propertiesFile: File) : PropertiesFile(propertiesFile) {
-
-    companion object {
-        private const val VERSION_NAME = "version.name"
-        private const val VERSION_CODE = "version.code"
-    }
+class ModuleVersion {
 
     val versionName: String
-        get() = properties.getProperty(VERSION_NAME)
-            ?: throw IllegalStateException("$VERSION_NAME property is missing")
-
+        get() = gitTag()?.removePrefix("v") ?: "1.0.0"
 
     val versionCode: Int
-        get() = properties.getProperty(VERSION_CODE)?.toInt()
-            ?: throw IllegalStateException("$VERSION_CODE property is missing")
+        get() = gitCommitCount()
 
+    private fun gitTag(): String? {
+        return try {
+            val process = ProcessBuilder("git", "describe", "--tags", "--abbrev=0")
+                .redirectErrorStream(true)
+                .start()
+            val result = process.inputStream.bufferedReader().readText().trim()
+            process.waitFor()
+            if (result.isNotEmpty() && result.startsWith("v")) result else null
+        } catch (_: Exception) {
+            null
+        }
+    }
 
-    fun updateVersion() {
-        properties.run {
-            setProperty(VERSION_CODE, (versionCode + 1).toString())
-            val (major, minor, patch) = versionName.split(".").map { it.toInt() }
-            setProperty(
-                VERSION_NAME, when {
-                    patch < 9 -> "$major.$minor.${patch + 1}"
-                    minor < 9 -> "$major.${minor + 1}.0"
-                    else -> "${major + 1}.0.$patch"
-                }
-            )
-            super.store(null)
+    private fun gitCommitCount(): Int {
+        return try {
+            val process = ProcessBuilder("git", "rev-list", "--count", "HEAD")
+                .redirectErrorStream(true)
+                .start()
+            val result = process.inputStream.bufferedReader().readText().trim()
+            process.waitFor()
+            result.toIntOrNull() ?: 1
+        } catch (_: Exception) {
+            1
         }
     }
 

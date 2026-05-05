@@ -1,6 +1,6 @@
 @file:Suppress("UnstableApiUsage")
 
-val version = ModuleVersion(rootProject.file("app/version.properties"))
+val version = ModuleVersion()
 
 plugins {
     id("kotlinx-serialization")
@@ -140,10 +140,4 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     // Compose Rich Text
     implementation(libs.richtext.commonmark)
-}
-
-tasks.register("update-version") {
-    doLast {
-        version.updateVersion()
-    }
 }
