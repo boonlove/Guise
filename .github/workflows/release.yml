@@ -1,0 +1,45 @@
+name: 🏷️ 创建 Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: 📦 编译 APK
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+
+  release:
+    name: 🏷️ 创建 GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 检出仓库代码
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: 下载 APK
+        uses: actions/download-artifact@v8
+        with:
+          pattern: "*.apk"
+          path: app/release
+          merge-multiple: true
+          skip-decompress: true
+
+      - name: 🏷️ 创建 GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: CHANGELOG.md
+          files: app/release/*.apk
+          generate_release_notes: true
+          prerelease: false
