@@ -49,6 +49,16 @@ android {
         }
     }
 
+    // ABI 拆分
+    splits {
+        abi {
+            isEnable = true           // 启用 ABI 拆分
+            reset()                   // 清除默认配置
+            include("arm64-v8a", "armeabi-v7a") // 只生成这两个架构
+            isUniversalApk = false    // 不生成通用 APK
+        }
+    }
+
     applicationVariants.all {
         val variant = this
         outputs.all {
@@ -61,7 +71,16 @@ android {
             val versionCode = version.versionCode
             val buildType = variant.buildType.name
 
-            output?.outputFileName = "${appName}-v${versionName}-${versionCode}-${buildType}.apk"
+            // 获取 ABI 名称
+            val abi = if (this is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                this.getFilter(com.android.build.OutputFile.ABI)
+            } else null
+
+            if (abi != null) {
+                output?.outputFileName = "${appName}_v${versionName}_${versionCode}-${abi}-${buildType}.apk"
+            } else {
+                output?.outputFileName = "${appName}_v${versionName}_${versionCode}-${buildType}.apk"
+            }
         }
     }
 
